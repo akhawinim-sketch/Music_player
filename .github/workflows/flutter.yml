@@ -1,0 +1,38 @@
+name: Flutter Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Android APK
+        run: flutter build apk --release
+
+      - name: Build Web
+        run: flutter build web
+
+      - name: Upload builds into repo
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git checkout -B builds
+          mkdir -p outputs
+          cp build/app/outputs/flutter-apk/app-release.apk outputs/
+          cp -r build/web outputs/web
+          git add outputs
+          git commit -m "Add latest builds"
+          git push origin builds --force
