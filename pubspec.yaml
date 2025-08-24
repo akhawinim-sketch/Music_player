@@ -1,26 +1,24 @@
 name: music_player
 description: A simple offline music player app
-publish_to: 'none' 
+
+publish_to: 'none'
+
+version: 1.0.0+1
 
 environment:
-  sdk: ">=2.17.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-
-  # Music/audio playback
-  just_audio: ^0.9.36
-
-  # For picking audio files from storage
-  file_picker: ^5.2.5
-
-  # For app icons and UI
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.6
+  audioplayers: ^6.0.0
+  permission_handler: ^11.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
