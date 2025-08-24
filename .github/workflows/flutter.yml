@@ -16,6 +16,10 @@ jobs:
         with:
           flutter-version: '3.19.0'
 
+      # 🔥 Auto-migrate to Android V2 embedding if needed
+      - name: Regenerate Android project (V2 embedding)
+        run: flutter create .
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -25,14 +29,15 @@ jobs:
       - name: Build Web
         run: flutter build web
 
-      - name: Upload builds into repo
+      # ✅ Save results directly into main branch
+      - name: Commit outputs to main
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git checkout -B builds
           mkdir -p outputs
           cp build/app/outputs/flutter-apk/app-release.apk outputs/
           cp -r build/web outputs/web
           git add outputs
-          git commit -m "Add latest builds"
+          git commit -m "Update builds [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:main          git commit -m "Add latest builds"
           git push origin builds --force
