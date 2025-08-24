@@ -1,69 +1,91 @@
 import 'package:flutter/material.dart';
-import 'package:on_audio_query/on_audio_query.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:file_picker/file_picker.dart';
 
 void main() {
-  runApp(MusicApp());
+  runApp(MusicPlayerApp());
 }
 
-class MusicApp extends StatefulWidget {
+class MusicPlayerApp extends StatelessWidget {
   @override
-  _MusicAppState createState() => _MusicAppState();
-}
-
-class _MusicAppState extends State<MusicApp> {
-  final OnAudioQuery _audioQuery = OnAudioQuery();
-  final AudioPlayer _player = AudioPlayer();
-  List<SongModel> _songs = [];
-
-  @override
-  void initState() {
-    super.initState();
-    requestPermission();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Music Player',
+      theme: ThemeData(primarySwatch: Colors.deepPurple),
+      home: MusicHomePage(),
+    );
   }
+}
 
-  void requestPermission() async {
-    var status = await Permission.storage.request();
-    if (status.isGranted) {
-      fetchSongs();
+class MusicHomePage extends StatefulWidget {
+  @override
+  _MusicHomePageState createState() => _MusicHomePageState();
+}
+
+class _MusicHomePageState extends State<MusicHomePage> {
+  final AudioPlayer _player = AudioPlayer();
+  String? fileName;
+
+  Future<void> pickAndPlay() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.audio,
+    );
+
+    if (result != null) {
+      String? path = result.files.single.path;
+      if (path != null) {
+        await _player.setFilePath(path);
+        _player.play();
+        setState(() {
+          fileName = result.files.single.name;
+        });
+      }
     }
   }
 
-  void fetchSongs() async {
-    List<SongModel> songs = await _audioQuery.querySongs();
-    setState(() {
-      _songs = songs;
-    });
-  }
-
-  void playSong(String uri) async {
-    await _player.setAudioSource(AudioSource.uri(Uri.parse(uri)));
-    _player.play();
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: Text("Offline Music Player 🎶")),
-        body: _songs.isEmpty
-            ? Center(child: Text("No songs found"))
-            : ListView.builder(
-                itemCount: _songs.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: QueryArtworkWidget(
-                      id: _songs[index].id,
-                      type: ArtworkType.AUDIO,
-                      nullArtworkWidget: Icon(Icons.music_note),
-                    ),
-                    title: Text(_songs[index].title),
-                    subtitle: Text(_songs[index].artist ?? "Unknown Artist"),
-                    onTap: () => playSong(_songs[index].uri!),
-                  );
-                },
-              ),
+    return Scaffold(
+      appBar: AppBar(title: Text("Offline Music Player")),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.music_note, size: 100, color: Colors.deepPurple),
+            SizedBox(height: 20),
+            Text(fileName ?? "No song playing",
+                style: TextStyle(fontSize: 18)),
+            SizedBox(height: 40),
+            ElevatedButton.icon(
+              onPressed: pickAndPlay,
+              icon: Icon(Icons.library_music),
+              label: Text("Pick & Play Song"),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () => _player.pause(),
+              icon: Icon(Icons.pause),
+              label: Text("Pause"),
+            ),
+            ElevatedButton.icon(
+              onPressed: () => _player.play(),
+              icon: Icon(Icons.play_arrow),
+              label: Text("Play"),
+            ),
+            ElevatedButton.icon(
+              onPressed: () => _player.stop(),
+              icon: Icon(Icons.stop),
+              label: Text("Stop"),
+            ),
+          ],
+        ),
       ),
     );
   }
